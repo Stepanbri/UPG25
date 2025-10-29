@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:l="clr-namespace:Cv06;assembly=Cv06_Avalonia"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Cv06.MainWindow"
+        Title="Cv06">
+	<Grid RowDefinitions="*, auto">
+        <l:DrawingPanel Name="drawingPanel" Grid.Row="0" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="BttnSmaller" 
+                    Content="Smaller" 
+                    Margin="5"
+                    Click="BttnSmaller_Click"
+           />
+            <Button Name="BttnExit" 
+                    Content="Exit" 
+                    Margin="5"
+                    HotKey="Alt+X"
+                    Click="BttnExit_Click"
+           />
+        </StackPanel>
+    </Grid>
+</Window>
