@@ -25,7 +25,11 @@ namespace Cv08
                 //pocet sekund, ktere uplynuly
                 float elapsed = (Environment.TickCount - startTime) / 1000.0f;
 
-                //TODO: animovat automaticky jednotlive rezy              
+                //TODO: animovat automaticky jednotlive rezy             
+                const int fps = 20; // 20 rezu za sekundu
+                int index_rezu = (int)(elapsed * fps); 
+
+                this.drawingPanel.Z = index_rezu % this.drawingPanel.ZMax;
 
                 this.InvalidateVisual();
             };

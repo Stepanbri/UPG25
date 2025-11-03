@@ -146,25 +146,51 @@ public partial class DrawingPanel : UserControl
         get
         {
             //TODO: nevytvaret vzdy, udelat cachovani
+            if (this._slice_XY != null)
+            {
+                return this._slice_XY;
+            }
 
             var img = new WriteableBitmap(
-                new PixelSize(DATA_SX, DATA_SY), 
+                new PixelSize(DATA_SX, DATA_SY),
                 new Vector(96, 96),         //96 ppi pro vypocet fyzicke velikosti
                 PixelFormats.Rgb24
                 );
 
             //cerny obrazek
+            /*
             using (var img_buf = img.Lock())
             {
                 byte[] pixels = new byte[img_buf.RowBytes * img_buf.Size.Height];
                 Marshal.Copy(pixels, 0, img_buf.Address, pixels.Length);
-            }
+            }*/
 
             
             //TODO: vytvorit a vratit obrazek z rezem XY (v Z)
+            using (var img_buf = img.Lock())
+            {
+                byte[] pixels = new byte[img_buf.RowBytes * img_buf.Size.Height];
+
+                int offset = this.Z * (DATA_SX * DATA_SY);
+                for (int y = 0, idx_row = 0; y < DATA_SY; y++, idx_row += img_buf.RowBytes)
+                {
+                    for (int x = 0, idx = idx_row; x < DATA_SX; x++, idx += 3)
+                    {
+                        byte value = this.Data[offset + x];
+                        Color color = this.Lut[value];
+
+                        pixels[idx] = color.R;
+                        pixels[idx + 1] = color.G;
+                        pixels[idx + 2] = color.B;
+                    }
+                    offset += DATA_SX;
+                }
+                Marshal.Copy(pixels, 0, img_buf.Address, pixels.Length);
+            }
+
 
             //TODO: pouzit LUT pro urychleni
-
+            this._slice_XY = img;
             return img;
         }
     }
@@ -207,12 +233,34 @@ public partial class DrawingPanel : UserControl
         }
     }
 
+    public Color[] Lut { get; protected set; }
+
     public DrawingPanel()
     {
-        InitializeComponent();                      
+        InitializeComponent();
+
+        this.Lut = MakeLut(64, 100);            
     }
 
-     /// <summary>
+    private Color[] MakeLut(int min, int max)
+    {
+        Color[] clr = new Color[256];
+        for (int i = 0; i < clr.Length; i++)
+        {
+            if (i < min)
+                clr[i] = Colors.Black;
+            else if (i >= max)
+                clr[i] = Colors.White;
+            else
+            {
+                byte v = (byte)(255 * (i - min) / (max - min)); // v = intensity
+                clr[i] = new Color(255, v, v, v);
+            }
+        }
+        return clr;
+    }
+
+    /// <summary>
     /// Renders the visual to a <see cref="T:Avalonia.Media.DrawingContext" />.
     /// </summary>
     /// <param name="context">The drawing context.</param>
@@ -222,11 +270,11 @@ public partial class DrawingPanel : UserControl
 
         //do leveho horniho rohu zobrazime rez XY
         context.DrawImage(SliceXY, new Rect(0, 0, SliceXY.Size.Width, SliceXY.Size.Height));
-      
+
         //vypis, kde se nachazime
-        const float GAP = 16;                
+        const float GAP = 16;
         var text = new FormattedText("z = " + Z, System.Globalization.CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight, new Typeface("Arial"), 16, Brushes.Black);        
+            FlowDirection.LeftToRight, new Typeface("Arial"), 16, Brushes.Black);
         context.DrawText(text, new Point(GAP, SliceXY.Size.Height + GAP));
     }
 }
